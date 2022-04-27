@@ -1,7 +1,7 @@
 /*
  * kpWeb JavaScript Library
  * https://github.com/vattik/libs/tree/main/kp-web
- * Date: 2022-04-08
+ * Date: 2022-04-26
  * 
  * Dependencies: PageDOM
  */
@@ -159,7 +159,10 @@
             result.genre = genres;
         }
 
-        result.slogan = PageDOM.findSingleNode('descendant::*[count(*)=2 and *[1][normalize-space()="Слоган"]]/*[2]/*[normalize-space()][1][not(normalize-space()="-" or normalize-space()="—")]', dom) ?? "";
+        let slogan = PageDOM.findSingleNode('descendant::*[count(*)=2 and *[1][normalize-space()="Слоган"]]/*[2]/*[normalize-space()][1][not(normalize-space()="-" or normalize-space()="—")]', dom);
+        const matches = /^[«][ ]*(.{2,}?)[ ]*[»]$/.exec(slogan);
+        if (matches) { slogan = matches[1]; }
+        result.slogan = slogan ?? "";
 
         let directors = [];
         if (typeof(jsonLd.director) === 'object' && jsonLd.director.length) {
