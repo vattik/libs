@@ -1,7 +1,7 @@
 /*
  * kpWeb JavaScript Library
  * https://github.com/vattik/libs/tree/main/kp-web
- * Date: 2022-04-26
+ * Date: 2023-01-22
  * 
  * Dependencies: PageDOM
  */
@@ -198,8 +198,11 @@
 
         result.duration = jsonLd.timeRequired && /^\d{1,3}$/.test(jsonLd.timeRequired) ? Number(jsonLd.timeRequired) : PageDOM.findSingleNode('descendant::*[count(*)=2 and *[1][normalize-space()="Время"]]/*[2]/*[normalize-space()][1]', dom, false, /^(\d{1,3})\s*м/i);
 
-        let actors = [];
-        if (typeof(jsonLd.actor) === 'object' && jsonLd.actor.length) {
+        let actors = PageDOM.findNodes('descendant::*/*[normalize-space()][1][starts-with(normalize-space(),"В главных ролях")]/following-sibling::*[1]/li/a[normalize-space()]', dom, patternPersonName);
+        if (actors.indexOf(null) !== -1) {
+            actors = [];
+        }
+        if (actors.length === 0 && typeof(jsonLd.actor) === 'object' && jsonLd.actor.length) {
             for (const person of jsonLd.actor) {
                 if (person.name && patternPersonName.test(person.name)) {
                     actors.push(person.name);
@@ -207,12 +210,6 @@
                     actors = [];
                     break;
                 }
-            }
-        }
-        if (actors.length === 0) {
-            actors = PageDOM.findNodes('descendant::*/*[normalize-space()][1][starts-with(normalize-space(),"В главных ролях")]/following-sibling::*[1]/li/a[normalize-space()]', dom, patternPersonName);
-            if (actors.indexOf(null) !== -1) {
-                actors = [];
             }
         }
         if (actors.length) {
