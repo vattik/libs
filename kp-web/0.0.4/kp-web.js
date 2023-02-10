@@ -1,7 +1,7 @@
 /*
  * kpWeb JavaScript Library
  * https://github.com/vattik/libs/tree/main/kp-web
- * Date: 2023-01-22
+ * Date: 2023-02-09
  * 
  * Dependencies: PageDOM
  */
@@ -18,7 +18,8 @@
     const patternMPAA = /^(?:MPAA[:\s]+)?([A-Z\d][-A-Z\d]*)$/i; // R    |    PG-13
 
     const blankFields = {
-        "id": null,
+        "id": null, // www.kinopoisk.ru
+        "contentId": "", // hd.kinopoisk.ru
         "type": "",
         "poster": "",
         "name": "",
@@ -39,7 +40,7 @@
     const parse = function(dom = null, url = null) {
         if (dom === null) dom = document;
         if (url === null) url = dom.location;
-        const result = blankFields;
+        const result = Object.create(blankFields);
 
         let jsonLd = {};
         try {
@@ -47,12 +48,12 @@
             jsonLd = JSON.parse(jsonLdVal);
         } catch {}
 
-        // let jsonNext = {};
-        // try {
-        //     const jsonNextVal = dom.querySelector('script#__NEXT_DATA__').textContent;
-        //     jsonNext = JSON.parse(jsonNextVal);
-        // } catch {}
-        // jsonNext.props.apolloState.data;
+        let jsonNext = {};
+        try {
+            const jsonNextVal = dom.querySelector('script#__NEXT_DATA__').textContent;
+            const jsonNextData = JSON.parse(jsonNextVal).props.apolloState.data;
+            jsonNext = jsonNextData;
+        } catch {}
 
         const urlValues = [];
         if (url) {
@@ -78,7 +79,16 @@
         const URLsText = urlValues.join('\n');
         const IDs = /\/(\d+)\//.exec(URLsText);
         result.id = IDs !== null ? Number(IDs[1]) : null;
-        
+
+        let contentId = null;
+        if (result.id) {
+            try {
+                contentId = 'Film:' + result.id in jsonNext && 'contentId' in jsonNext['Film:' + result.id]
+                ? jsonNext['Film:' + result.id].contentId : jsonNext['TvSeries:' + result.id].contentId;
+            } catch {}
+        }
+        result.contentId = contentId ?? "";
+
         result.type = isSeries(dom, URLsText) ? "series" : "film";
 
         result.poster = jsonLd.image ?? "";
